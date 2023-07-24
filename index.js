@@ -36,6 +36,7 @@ async function run() {
     const movies = database.collection("menu");
     const userCollection=database.collection("userCollection");
     app.post('/users',async(req,res)=>{
+      
       const data=req.body;
       console.log("dataall",data);
       const result = await userCollection.insertOne(data);
