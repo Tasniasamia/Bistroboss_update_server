@@ -2,7 +2,7 @@ const express = require('express')
 const app = express()
 
 const port = 3650 || process.env.PORT;
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 var cors = require('cors')
 require('dotenv').config()
 app.use(
@@ -30,7 +30,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+  await client.connect();
     // Send a ping to confirm a successful connection
     const database = client.db("Bistroboss");
     const movies = database.collection("menu");
@@ -39,6 +39,13 @@ async function run() {
       const data=req.body;
       console.log("dataall",data);
       const result = await userCollection.insertOne(data);
+      res.send(result);
+
+    })
+    app.delete('/user/:id',async(req,res)=>{
+      const id=req.params.id;
+      const _id={_id:new ObjectId(id)};
+      const result = await userCollection.deleteOne(_id);
       res.send(result);
 
     })
