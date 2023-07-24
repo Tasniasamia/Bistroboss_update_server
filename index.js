@@ -47,6 +47,12 @@ async function run() {
         const result=await movies.find().toArray();
         res.send(result);
     })
+    app.get('/cart',async(req,res)=>{
+      const email=req?.query?.email;
+      const result=await userCollection.find({email:email}).toArray();
+      res.send(result);
+      
+    })
    
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
