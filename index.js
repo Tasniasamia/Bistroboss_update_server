@@ -35,6 +35,27 @@ async function run() {
     const database = client.db("Bistroboss");
     const movies = database.collection("menu");
     const userCollection=database.collection("userCollection");
+    const alluser=database.collection("Alluser");
+    //sign in data collection
+    app.post('/Allusers',async(req,res)=>{
+      const data=req.body;
+      const email=data.email;
+      const existuser=await alluser.findOne({email:email})
+      console.log(existuser);
+      if(existuser){
+       return res.send({message : "The user is already exist"})
+      }
+      else{
+        const result = await alluser.insertOne(data);
+        res.send(result);
+      }
+    
+
+
+
+    })
+   
+    //cart data insertion
     app.post('/users',async(req,res)=>{
       
       const data=req.body;
@@ -43,6 +64,8 @@ async function run() {
       res.send(result);
 
     })
+
+    //delete from user select cart
     app.delete('/user/:id',async(req,res)=>{
       const id=req.params.id;
       const _id={_id:new ObjectId(id)};
@@ -50,18 +73,52 @@ async function run() {
       res.send(result);
 
     })
+    //delete from alluser data
+    app.delete('/Allusers/:id',async(req,res)=>{
+      const id=req.params.id;
+      const _id={_id:new ObjectId(id)};
+      const result = await alluser.deleteOne(_id);
+      res.send(result);
+
+    })
+    //update user into alluser data
+    app.patch('/UserRoleUpdate/:id',async(req,res)=>{
+      const id=req.params.id;
+      const query={_id:new ObjectId(id)};
+      const updateDoc = {
+
+        $set: {
+  
+         role:"Admin"
+  
+        },
+  
+      };
+
+      const result = await alluser.updateOne(query, updateDoc);
+      res.send(result);
+
+    })
+    //menu data collectiion
     app.get('/menudata',async(req,res)=>{
         
         const result=await movies.find().toArray();
         res.send(result);
     })
+    //find cart data as email wise
     app.get('/cart',async(req,res)=>{
       const email=req?.query?.email;
       const result=await userCollection.find({email:email}).toArray();
       res.send(result);
       
     })
-   
+    //upload all users data
+    app.get('/AllusersData',async(req,res)=>{
+      const result=await alluser.find().toArray();
+      res.send(result);
+ 
+ 
+     })
     await client.db("admin").command({ ping: 1 });
     console.log("Pinged your deployment. You successfully connected to MongoDB!");
   } finally {
