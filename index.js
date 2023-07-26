@@ -4,6 +4,7 @@ const app = express()
 const port = 3650 || process.env.PORT;
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 var cors = require('cors')
+const jwt = require('jsonwebtoken');
 require('dotenv').config()
 app.use(
   cors({
@@ -36,6 +37,27 @@ async function run() {
     const movies = database.collection("menu");
     const userCollection=database.collection("userCollection");
     const alluser=database.collection("Alluser");
+    //verifyjwt
+    const verifyjwt=(req,res,next)=>{
+      let istoken=req?.headers?.authorization;
+      if(!istoken){
+      return   res.status(400).send({error:true, message:"You are a unauthorized authorizer"})
+      }
+  
+        const token=istoken.split(' ')[1];
+        console.log("our token",token);
+        jwt.verify(token, process.env.ACCESS_TOKEN, function(err, decoded) {
+         if(err){
+       return   res.status(401).send({error:true,message:"Sorry you aren't authorized"})
+         }
+         req.decoded=decoded;
+         next();
+        });
+
+    
+
+
+    }
     //sign in data collection
     app.post('/Allusers',async(req,res)=>{
       const data=req.body;
@@ -99,6 +121,12 @@ async function run() {
       res.send(result);
 
     })
+    //create jwt token
+    app.post('/jwt',async(req,res)=>{
+      const user=req.body;
+      var token = jwt.sign( user, process.env.ACCESS_TOKEN,  { expiresIn: '2h' });
+      res.send({tokenkey : token});
+    })
     //menu data collectiion
     app.get('/menudata',async(req,res)=>{
         
@@ -106,8 +134,11 @@ async function run() {
         res.send(result);
     })
     //find cart data as email wise
-    app.get('/cart',async(req,res)=>{
+    app.get('/cart',verifyjwt,async(req,res)=>{
       const email=req?.query?.email;
+      // if(email!==decoded.email){
+      //   res.status(403).send({error:true,message:"Unauthorized User"})
+      // }
       const result=await userCollection.find({email:email}).toArray();
       res.send(result);
       
