@@ -41,14 +41,14 @@ async function run() {
     const verifyjwt=(req,res,next)=>{
       let istoken=req?.headers?.authorization;
       if(!istoken){
-      return   res.status(400).send({error:true, message:"You are a unauthorized authorizer"})
+      return   res.status(401).send({error:true, message:"You are a unauthorized authorizer"})
       }
   
         const token=istoken.split(' ')[1];
         console.log("our token",token);
         jwt.verify(token, process.env.ACCESS_TOKEN, function(err, decoded) {
          if(err){
-       return   res.status(401).send({error:true,message:"Sorry you aren't authorized"})
+       return   res.status(403).send({error:true,message:"Sorry you aren't authorized"})
          }
          req.decoded=decoded;
          next();
@@ -59,18 +59,18 @@ async function run() {
 
     }
     //sign in data collection
-    app.post('/Allusers',async(req,res)=>{
+    app.post('/Allusers',verifyjwt,async(req,res)=>{
       const data=req.body;
       const email=data.email;
       const existuser=await alluser.findOne({email:email})
       console.log(existuser);
       if(existuser){
-       return res.send({message : "The user is already exist"})
+       return res.status(500).send({message : "The user is already exist"})
       }
-      else{
+      // else{
         const result = await alluser.insertOne(data);
         res.send(result);
-      }
+      // }
     
 
 
@@ -78,7 +78,7 @@ async function run() {
     })
    
     //cart data insertion
-    app.post('/users',async(req,res)=>{
+    app.post('/users',verifyjwt,async(req,res)=>{
       
       const data=req.body;
       console.log("dataall",data);
@@ -136,11 +136,13 @@ async function run() {
     //find cart data as email wise
     app.get('/cart',verifyjwt,async(req,res)=>{
       const email=req?.query?.email;
-      // if(email!==decoded.email){
-      //   res.status(403).send({error:true,message:"Unauthorized User"})
-      // }
+      if(email!==   req.decoded.email){
+  return      res.status(403).send({error:true,message:"Unauthorized User"})
+      }
       const result=await userCollection.find({email:email}).toArray();
+      console.log("cartcollection",result);
       res.send(result);
+
       
     })
     //upload all users data
